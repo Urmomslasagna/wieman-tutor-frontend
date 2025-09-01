@@ -1,29 +1,33 @@
 import axios from "axios";
 
-// Replace with your Render backend URL
-const BACKEND_URL = "https://wieman-tutor-backend.onrender.com";
-
-export async function startSession(topic: string, goals: string) {
-  try {
-    const response = await axios.post(`${BACKEND_URL}/sessions`, {
-      topic,
-      goals,
-    });
-    return response.data;
-  } catch (err: any) {
-    console.error("Error starting session:", err.response?.data || err.message);
-    throw new Error("Failed to start session");
-  }
+// Define the expected response types
+interface SessionResponse {
+  session_id: number;
+  topic: string;
 }
 
-export async function sendMessage(sessionId: number, message: string) {
-  try {
-    const response = await axios.post(`${BACKEND_URL}/sessions/${sessionId}/turns`, {
-      message,
-    });
-    return response.data;
-  } catch (err: any) {
-    console.error("Error sending message:", err.response?.data || err.message);
-    throw new Error("Failed to send message");
-  }
+interface TurnResponse {
+  assistant: string;
+  difficulty: number;
+}
+
+// Make sure to set this in your .env file or Render environment variables
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
+
+// Start a new tutoring session
+export async function startSession(topic: string, goals: string): Promise<SessionResponse> {
+  const response = await axios.post<SessionResponse>(
+    `${BACKEND_URL}/sessions`,
+    { topic, goals }
+  );
+  return response.data;
+}
+
+// Send a user message to the backend and get assistant reply
+export async function sendMessage(sessionId: number, message: string): Promise<TurnResponse> {
+  const response = await axios.post<TurnResponse>(
+    `${BACKEND_URL}/sessions/${sessionId}/turns`,
+    { message }
+  );
+  return response.data;
 }
